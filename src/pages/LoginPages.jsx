@@ -4,8 +4,8 @@ import API from "@/utils/API"; // ✅ Alias orqali ishlatish
 import './LoginPages.css';  // ✅ CSS faylni import qilish
 
 function LoginPages() {
-    const [username, setUsername] = useState('');
-    const [pass, setPas] = useState('');
+    const [username, setUsername] = useState('emplys');
+    const [pass, setPas] = useState('emplyspass');
     const navigate = useNavigate();
 
     if (localStorage.getItem('accessToken')) {
