@@ -8,12 +8,10 @@ import { BrowserRouter } from 'react-router-dom';
 // ✅ Query Client yaratish
 const queryClient = new QueryClient();
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-    <React.StrictMode>
+ReactDOM.createRoot(document.getElementById('root')).render( 
         <QueryClientProvider client={queryClient}>
             <BrowserRouter>
             <App />
             </BrowserRouter>
         </QueryClientProvider>
-    </React.StrictMode>
 );

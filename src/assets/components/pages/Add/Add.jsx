@@ -3,29 +3,32 @@ import useStore from "../../../../store";
 import React from "react";
 
 import "./Add.css";
-const Add = () => {
-    const addProduct = useStore((state) => state.addProduct);
-    const products = useStore((state) => state.products);
-    const removeProduct = useStore((state) => state.removeProduct);
 
+const Add = () => {
+    const { addProduct, products, removeProduct, setProducts, isLoggedIn } = useStore();
+
+    console.log("📌 Store-dagi products:", products); // 🔍 Tekshirish uchun qo‘shildi
+    
     const [name, setName] = useState("");
     const [price, setPrice] = useState("");
     const [category, setCategory] = useState("");
     const [image, setImage] = useState("");
     const [isOpen, setIsOpen] = useState(false);
-    const [, setFile] = useState(null);
-
     const [editOpen, setEditOpen] = useState(false);
     const [editProduct, setEditProduct] = useState(null);
 
+    // 🔹 Endi `if (!isLoggedIn) return null;` ni ishlatsak bo‘ladi
+    if (!isLoggedIn) return null;
     const handleImageUpload = (e) => {
         const file = e.target.files[0];
-        setFile(file);
-        setImage(URL.createObjectURL(file));
+        if (file) {
+            setImage(URL.createObjectURL(file));
+        }
     };
 
     const handleSubmit = () => {
         if (!name || !price || !category) return;
+
         addProduct({
             id: Date.now(),
             name,
@@ -33,12 +36,12 @@ const Add = () => {
             category,
             image: image || "https://via.placeholder.com/150",
         });
+
         setName("");
         setPrice("");
         setCategory("");
         setImage("");
-        setFile(null);
-        setIsOpen(false); 
+        setIsOpen(false);
     };
 
     const handleEdit = (product) => {
@@ -52,11 +55,12 @@ const Add = () => {
 
     const handleUpdate = () => {
         if (!editProduct) return;
-        useStore.setState((state) => ({
-            products: state.products.map((p) =>
+
+        setProducts(
+            products.map((p) =>
                 p.id === editProduct.id ? { ...p, name, price, category, image } : p
-            ),
-        }));
+            )
+        );
         setEditOpen(false);
     };
 

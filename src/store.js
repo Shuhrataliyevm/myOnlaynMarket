@@ -1,39 +1,39 @@
+// export default useStore;
 import { create } from "zustand";
 
-// 🔹 LocalStorage'dan ma'lumotlarni olish funksiyasi
+// 🔹 LocalStorage'dan ma'lumot olish funksiyasi
 const getStoredData = (key, defaultValue) => {
     try {
         const data = localStorage.getItem(key);
-        return data ? JSON.parse(data) : defaultValue;
+        return data && data !== "undefined" && data !== "null" ? JSON.parse(data) : defaultValue;
     } catch (error) {
-        console.error(`Error parsing localStorage key: ${key}`, error);
+        console.error(`❌ Error parsing localStorage key: ${key}`, error);
         return defaultValue;
     }
 };
 
-// 🔹 LocalStorage'ga ma'lumotni saqlash funksiyasi
+// 🔹 LocalStorage'ga ma'lumot saqlash funksiyasi
 const saveToLocalStorage = (key, data) => {
     try {
         localStorage.setItem(key, JSON.stringify(data));
     } catch (error) {
-        console.error(`Error saving to localStorage key: ${key}`, error);
+        console.error(`❌ Error saving to localStorage key: ${key}`, error);
     }
 };
 
-// 🔹 Zustand store'ni yaratish
+// 🔹 Zustand store
 const useStore = create((set) => ({
     products: getStoredData("products", []),
     boughtProducts: getStoredData("boughtProducts", []),
     likedProducts: getStoredData("likedProducts", []),
-    user: getStoredData("user", null), // 🔹 Login foydalanuvchisi
+    user: getStoredData("user", null), 
+    isLoggedIn: getStoredData("isLoggedIn", false), // ✅ Xotiradan login holatini olish
 
-    // 🔹 Mahsulotlar listini o‘zgartirish
     setProducts: (products) => {
         saveToLocalStorage("products", products);
         set({ products });
     },
 
-    // 🔹 Yangi mahsulot qo‘shish
     addProduct: (product) =>
         set((state) => {
             const updatedProducts = [...state.products, product];
@@ -41,7 +41,6 @@ const useStore = create((set) => ({
             return { products: updatedProducts };
         }),
 
-    // 🔹 Mahsulotni yoqtirish (Like)
     likeProduct: (product) =>
         set((state) => {
             const isLiked = state.likedProducts.some((p) => p.id === product.id);
@@ -52,53 +51,48 @@ const useStore = create((set) => ({
             saveToLocalStorage("likedProducts", updatedLikedProducts);
             return { likedProducts: updatedLikedProducts };
         }),
-    buyProduct: (product) => set((state) => {
-        const isBought = state.boughtProducts.some((p) => p.id === product.id);
-        if (isBought) {
-            return {
-                boughtProducts: state.boughtProducts.map((p) =>
-                    p.id === product.id ? { ...p, quantity: p.quantity + 1 } : p
-                ),
-            };
-        } else {
-            return {
-                boughtProducts: [...state.boughtProducts, { ...product, quantity: 1 }],
-            };
-        }
-    }),
 
-    // 🔹 Sotib olingan mahsulot miqdorini oshirish
+    buyProduct: (product) =>
+        set((state) => {
+            const isBought = state.boughtProducts.some((p) => p.id === product.id);
+            if (isBought) {
+                const updatedBoughtProducts = state.boughtProducts.map((p) =>
+                    p.id === product.id ? { ...p, quantity: p.quantity + 1 } : p
+                );
+                saveToLocalStorage("boughtProducts", updatedBoughtProducts);
+                return { boughtProducts: updatedBoughtProducts };
+            } else {
+                const updatedBoughtProducts = [...state.boughtProducts, { ...product, quantity: 1 }];
+                saveToLocalStorage("boughtProducts", updatedBoughtProducts);
+                return { boughtProducts: updatedBoughtProducts };
+            }
+        }),
+
     increaseQuantity: (id) =>
         set((state) => {
             const updatedBoughtProducts = state.boughtProducts.map((p) =>
                 p.id === id ? { ...p, quantity: p.quantity + 1 } : p
             );
-
             saveToLocalStorage("boughtProducts", updatedBoughtProducts);
             return { boughtProducts: updatedBoughtProducts };
         }),
 
-    // 🔹 Sotib olingan mahsulot miqdorini kamaytirish
     decreaseQuantity: (id) =>
         set((state) => {
             const updatedBoughtProducts = state.boughtProducts.map((p) =>
                 p.id === id && p.quantity > 1 ? { ...p, quantity: p.quantity - 1 } : p
             );
-
             saveToLocalStorage("boughtProducts", updatedBoughtProducts);
             return { boughtProducts: updatedBoughtProducts };
         }),
 
-    // 🔹 Sotib olingan mahsulotni o‘chirish
     removeBoughtProduct: (id) =>
         set((state) => {
             const updatedBoughtProducts = state.boughtProducts.filter((p) => p.id !== id);
-
             saveToLocalStorage("boughtProducts", updatedBoughtProducts);
             return { boughtProducts: updatedBoughtProducts };
         }),
 
-    // 🔹 Mahsulotni umumiy ro‘yxatdan o‘chirish
     removeProduct: (id) =>
         set((state) => {
             const updatedProducts = state.products.filter((p) => p.id !== id);
@@ -116,19 +110,22 @@ const useStore = create((set) => ({
             };
         }),
 
-    // 🔹 LOGIN funksiyasi
-    login: (user) =>
-        set(() => {
+    // ✅ Login funksiyasini yaxshilash
+    login: (user) => {
+        if (user && typeof user === "object") {
             saveToLocalStorage("user", user);
-            return { user };
-        }),
+            saveToLocalStorage("isLoggedIn", true);
+            set({ user, isLoggedIn: true });
+        } else {
+            console.error("❌ Invalid user data:", user);
+        }
+    },
 
-    // 🔹 LOGOUT funksiyasi
-    logout: () =>
-        set(() => {
-            localStorage.removeItem("user");
-            return { user: null };
-        }),
+    logout: () => {
+        localStorage.removeItem("user");
+        localStorage.removeItem("isLoggedIn");
+        set({ user: null, isLoggedIn: false });
+    },
 }));
 
 export default useStore;

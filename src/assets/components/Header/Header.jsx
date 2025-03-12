@@ -1,26 +1,27 @@
+
 import { NavLink } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import React from "react";
+import useStore from "@/store"; // ✅ Zustand store
 
 import "./Header.css";
-import useStore from "@/store"; // ✅ Zustand'dan olish
 
 const Header = () => {
-    const [isAuth, setIsAuth] = useState(false);
+    const { user, logout, likedProducts, boughtProducts } = useStore();
     const [darkMode, setDarkMode] = useState(false);
     const [language, setLanguage] = useState("EN");
-    const { likedProducts } = useStore(); // ✅ Liked mahsulotlar sonini olish
-    
+
     useEffect(() => {
-        setIsAuth(!!localStorage.getItem("accessToken")); // ✅ Auth tokenni tekshirish
-    }, []);
+        console.log("User:", user); // ✅ Foydalanuvchi mavjudligini tekshirish
+    }, [user]);
 
-
+    // 🔹 Dark Mode almashtirish funksiyasi
     const toggleDarkMode = () => {
         setDarkMode(!darkMode);
         document.body.classList.toggle("dark-mode");
     };
 
+    // 🔹 Til almashtirish funksiyasi
     const changeLanguage = () => {
         setLanguage(language === "EN" ? "UZ" : "EN");
     };
@@ -28,21 +29,26 @@ const Header = () => {
     return (
         <div className="container">
             <div className="navbar">
+                {/* 🔹 LOGO */}
                 <div className="navbar-logo">
                     <img src="/src/assets/Icon/picsvg_download.svg" alt="Logo" />
                 </div>
+
+                {/* 🔹 NAVIGATION */}
                 <nav className="header">
                     <NavLink to="/">Home</NavLink>
-                    <NavLink to="/add">Add</NavLink>
+                    {user && <NavLink to="/add">Add</NavLink>} {/* ✅ Faqat user login bo‘lsa */}
                     <NavLink to="/products">Products</NavLink>
-                    {isAuth && <NavLink to="/profile">Profile</NavLink>}
+                    {user && <NavLink to="/profile">Profile</NavLink>}
                     <NavLink to="/buy">
-                        Buy {useStore.getState().boughtProducts.length > 0 && `(${useStore.getState().boughtProducts.length})`}
+                        Buy {boughtProducts.length > 0 && `(${boughtProducts.length})`}
                     </NavLink>
                     <NavLink to="/favorite">
                         Liked {likedProducts.length > 0 && `(${likedProducts.length})`}
                     </NavLink>
                 </nav>
+
+                {/* 🔹 CONTROLS */}
                 <div className="navbar-controls">
                     <button onClick={toggleDarkMode} className="mode-btn">
                         {darkMode ? "Light Mode" : "Dark Mode"}
@@ -50,10 +56,16 @@ const Header = () => {
                     <button onClick={changeLanguage} className="lang-btn">
                         {language}
                     </button>
-                    {!isAuth && (
+
+                    {/* 🔹 Agar foydalanuvchi login qilmagan bo‘lsa, "Login" tugmasi chiqadi */}
+                    {!user ? (
                         <NavLink className="loginButton" to="/login">
                             <button>Login</button>
                         </NavLink>
+                    ) : (
+                        <button onClick={logout} className="logoutButton">
+                            Logout
+                        </button>
                     )}
                 </div>
             </div>
