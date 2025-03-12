@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import API from "@/utils/api"; // ✅ Alias orqali ishlatish
+import API from "@/utils/API"; // ✅ Alias orqali ishlatish
 import './LoginPages.css';  // ✅ CSS faylni import qilish
 
 function LoginPages() {
